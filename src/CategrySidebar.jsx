@@ -1,60 +1,63 @@
-import React, { useEffect, useState } from "react";
+import { useState } from 'react';
+import Card from 'react-bootstrap/Card';
 
-function CategrySidebar() {
-  const [menuData, setMenuData] = useState(null);
 
-  useEffect(() => {
-    fetch("https://www.foodchow.com/api/FoodChowWD/GetRestaurantMenuWDWidget_multi?ShopId=3161&locale_id=null")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Full API response:", data);
-        console.log("typeof data.data:", typeof data.data);
+function CategrySidebar({ menuData }) {
 
-        let menuArray = data.data;
+  const [activeId, setActiveId] = useState(null);
 
-        // Step 1: Parse string if needed
-        if (typeof menuArray === "string") {
-          try {
-            menuArray = JSON.parse(menuArray);
-          } catch (err) {
-            console.error("❌ JSON parse error:", err);
-            return;
-          }
-        }
+  const handleClick = (id, isDeal=false) => {
 
-        // Step 2: Convert object-of-arrays to single array
-        if (!Array.isArray(menuArray)) {
-          menuArray = Object.values(menuArray).flat();
-        }
+    setActiveId(id);
+    console.log("isDeal", isDeal)
 
-        // console.log("✅ Final menuArray:", menuArray);
-        
-        setMenuData(menuArray);
-      })
-      .catch((error) => console.error("Error fetching data:", error));
-  }, []);
-
-  console.log(menuData)
+    const sectionId = isDeal ? id : `category-${id}`
+    const section = document.getElementById(sectionId);  
+    
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
 
   if (!menuData) {
     return <p>Loading menu...</p>;
   }
 
   return (
-    <div>
-      <h3>CATEGORIES</h3>
+
+    <Card>
+      <h3 style={{ fontSize: '18px', color: 'var(--dynamic-color)' }} className="p-3 border-bottom mb-0 fw-700">
+        CATEGORIES
+      </h3>
+
+      <div
+        className={`catg-li border-bottom ${activeId == "deal" ? "active-menu" : ""}`}
+        onClick={()=> handleClick("deal", true)}
+      >
+        <p>Deal</p>
+      </div>
       {
-        menuData.map((category)=> (
-        
-         <div key={category.CategryId}>
-            <p>
-               {category.CategryName}
-            </p>
-         </div>
-        
-        ))
+        menuData.map((category) => {
+          
+          if (category.CategryName) {
+            return (
+              <div
+                className={`catg-li border-bottom ${activeId === category.CategryId ? "active-menu" : ""}`}
+                key={category.CategryId}
+                onClick={() => handleClick(category.CategryId)}
+              >
+                <p>
+                  {category.CategryName}
+                </p>
+              </div>
+            )
+          }
+
+          
+        })
       }
-    </div>
+    </Card>
+
   );
 }
 
